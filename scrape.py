@@ -21,12 +21,24 @@ def is_allowed_by_robots(url, user_agent=HEADERS['User-Agent']):
         return False
     return rp.can_fetch(user_agent, url)
 
-def fetch_novel_api(ncode):
+def fetch_novel_api(ncode, current_chapter=1):
     ncode = ncode.lower()
     url = f"https://api.syosetu.com/novelapi/api/?out=json&ncode={requests.utils.quote(ncode)}"
     response = requests.get(url, headers=HEADERS)
     response.raise_for_status()
-    return response.json()
+    data = response.json()
+    if isinstance(data, list) and len(data) > 1 and data[1].get("ncode") and data[1].get("title") and data[1].get("writer") and data[1].get("general_all_no"):
+        novel = data[1]
+        return {
+            "ncode": novel["ncode"].lower(),
+            "current_chapter": current_chapter,
+            "title": novel["title"],
+            "author": novel["writer"],
+            "total_chapters": novel["general_all_no"],
+            "last_checked": int(time.time())
+        }
+    else:
+        raise Exception("Novel not found in Syosetu API")
 
 def scrape_chapter_data(ncode, chapter_num):
     url = f"https://ncode.syosetu.com/{requests.utils.quote(ncode)}/{requests.utils.quote(str(chapter_num))}"
