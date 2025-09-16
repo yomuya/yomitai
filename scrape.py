@@ -54,10 +54,15 @@ def scrape_chapter_data(ncode, chapter_num):
     chapter = soup.select_one('div.p-novel__text:not(.p-novel__text--preface):not(.p-novel__text--afterword)')
     afterword = soup.select_one('div.p-novel__text--afterword')
 
+    def format_text(element):
+        if not element:
+            return ""
+        return "\n\n".join([p.get_text(strip=True) for p in element.find_all("p")]) if element.find_all("p") else element.get_text(strip=True)
+
     title_text = title.get_text(strip=True) if title else ""
-    preface_text = preface.get_text(strip=True) if preface else ""
-    chapter_text = chapter.get_text(strip=True) if chapter else ""
-    afterword_text = afterword.get_text(strip=True) if afterword else ""
+    preface_text = format_text(preface)
+    chapter_text = format_text(chapter)
+    afterword_text = format_text(afterword)
     length_chars = len(preface_text) + len(chapter_text) + len(afterword_text)
 
     return {
